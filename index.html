@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Award Ceremony Display</title>
+  <style>
+    body {
+      background: url('background.png') no-repeat top center fixed;
+      background-color: black;
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      flex-direction: column;
+      text-align: center;
+      transition: background 0.5s ease;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin: 0.2em 0;
+    }
+
+    .agency {
+      font-size: 1.8em;
+      color: #ccc;
+    }
+
+    .award {
+      font-size: 2em;
+      color: #ffd700;
+      margin-top: 0.5em;
+    }
+
+    input {
+      opacity: 0;
+      position: absolute;
+      top: -100px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message {
+      font-size: 2em;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <input id="scannerInput" autofocus />
+  <div id="display">
+    <div class="message">*Scan a recipient’s QR code to begin*</div>
+  </div>
+
+  <script>
+    const input = document.getElementById("scannerInput");
+    const display = document.getElementById("display");
+    let data = [];
+
+    // Load data.json
+    fetch("data.json")
+      .then(res => res.json())
+      .then(json => { data = json; })
+      .catch(err => {
+        console.error("Error loading data.json:", err);
+        display.innerHTML = "<div class='message'>Error loading data.json</div>";
+      });
+
+    // Handle scanned input
+    input.addEventListener("change", () => {
+      const scannedId = input.value.trim();
+      input.value = ""; // reset for next scan
+
+      const recipient = data.find(p => p.RegID.toUpperCase() === scannedId.toUpperCase());
+      if (recipient) {
+        showRecipient(recipient);
+      } else {
+        display.innerHTML = `<div class="message">No record found for ID: ${scannedId}</div>`;
+      }
+    });
+
+    // Display recipient info
+    function showRecipient(rec) {
+      const AwardCategory = rec.AwardCategory.replace(/\n/g, "<br>");
+      display.innerHTML = `
+        <div class="fade-in">
+          <h1>${rec.FullName}</h1>
+          <div class="agency">${rec.Agency}</div>
+          <div class="award">${AwardCategory}</div>
+        </div>
+      `;
+    }
+
+    // Keep focus on input so scanner always works
+    window.addEventListener("click", () => input.focus());
+    window.addEventListener("load", () => input.focus());
+  </script>
+</body>
+</html>
